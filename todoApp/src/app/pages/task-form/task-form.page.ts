@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController, LoadingController, ToastController } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { Task, CreateTaskDTO, UpdateTaskDTO } from '../../models';
+import { SqliteService } from '../../services/sqlite.service';
 
 @Component({
   selector: 'app-task-form',
@@ -30,7 +31,8 @@ export class TaskFormPage implements OnInit, OnDestroy {
     private router: Router,
     private alertController: AlertController,
     private loadingController: LoadingController,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private sqliteService: SqliteService
   ) {
     this.taskForm = this.createForm();
   }
@@ -82,32 +84,18 @@ export class TaskFormPage implements OnInit, OnDestroy {
    */
   private async loadTaskForEditing(taskId: string) {
     try {
-      // Simulación de carga desde SQLite
-      // TODO: Reemplazar con: this.currentTask = await this.sqliteService.getTaskById(taskId);
-      
-      // Datos de prueba
-      this.currentTask = {
-        id: taskId,
-        title: 'Tarea de ejemplo',
-        description: 'Esta es una descripción de ejemplo para la tarea',
-        isCompleted: false,
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
-        updatedAt: new Date().toISOString(),
-        isSynced: true
-      };
-
+      await this.sqliteService.createDB();
+      const tasks = await this.sqliteService.getTasks();
+      this.currentTask = tasks.find(t => t.id === taskId) || null;
       if (this.currentTask) {
-        // Rellenar el formulario con los datos existentes
         this.taskForm.patchValue({
           title: this.currentTask.title,
           description: this.currentTask.description || '',
           isCompleted: this.currentTask.isCompleted
         });
       } else {
-        // Tarea no encontrada
         await this.showErrorAndGoBack('Tarea no encontrada');
       }
-      
     } catch (error) {
       console.error('Error loading task:', error);
       await this.showErrorAndGoBack('Error al cargar la tarea');
@@ -152,15 +140,17 @@ export class TaskFormPage implements OnInit, OnDestroy {
    */
   private async createNewTask() {
     const formValue = this.taskForm.value;
-    const newTaskData: CreateTaskDTO = {
+    const newTask: Task = {
+      id: crypto.randomUUID(),
       title: formValue.title.trim(),
-      description: formValue.description?.trim() || undefined
+      description: formValue.description?.trim() || undefined,
+      isCompleted: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      isSynced: false
     };
-
-    // TODO: Usar SQLite service
-    // const newTask = await this.sqliteService.createTask(newTaskData);
-    
-    console.log('✅ Nueva tarea creada:', newTaskData);
+    await this.sqliteService.addTask(newTask);
+    console.log('✅ Nueva tarea creada:', newTask);
   }
 
   /**
@@ -170,19 +160,17 @@ export class TaskFormPage implements OnInit, OnDestroy {
     if (!this.currentTask) {
       throw new Error('No hay tarea actual para actualizar');
     }
-
     const formValue = this.taskForm.value;
-    const updateData: UpdateTaskDTO = {
-      id: this.currentTask.id,
+    const updatedTask: Task = {
+      ...this.currentTask,
       title: formValue.title.trim(),
       description: formValue.description?.trim() || undefined,
-      isCompleted: formValue.isCompleted
+      isCompleted: formValue.isCompleted,
+      updatedAt: new Date().toISOString(),
+      isSynced: false
     };
-
-    // TODO: Usar SQLite service
-    // const updatedTask = await this.sqliteService.updateTask(updateData);
-    
-    console.log('📝 Tarea actualizada:', updateData);
+    await this.sqliteService.updateTask(updatedTask);
+    console.log('📝 Tarea actualizada:', updatedTask);
   }
 
   /**
@@ -221,18 +209,12 @@ export class TaskFormPage implements OnInit, OnDestroy {
     if (!this.currentTask) {
       return;
     }
-
     this.isSaving = true;
-
     try {
-      // TODO: Usar SQLite service
-      // await this.sqliteService.deleteTask(this.currentTask.id);
-      
+      await this.sqliteService.deleteTask(this.currentTask.id);
       console.log(`🗑️ Tarea eliminada: ${this.currentTask.id}`);
-      
       await this.showSuccessToast('Tarea eliminada correctamente');
       this.router.navigate(['/home']);
-      
     } catch (error) {
       console.error('Error deleting task:', error);
       await this.showErrorToast('Error al eliminar la tarea');

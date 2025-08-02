@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { Task } from '../models';
+import { SqliteService } from '../services/sqlite.service';
 
 @Component({
   selector: 'app-home',
@@ -26,7 +27,8 @@ export class HomePage implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private sqliteService: SqliteService
   ) {}
 
   ngOnInit() {
@@ -43,9 +45,9 @@ export class HomePage implements OnInit, OnDestroy {
   /**
    * Carga los datos iniciales y configura los listeners
    */
-  private loadInitialData() {
-    // TODO: Cargar tareas desde SQLite
-    this.loadTasksFromStorage();
+  private async loadInitialData() {
+    await this.sqliteService.createDB();
+    await this.loadTasksFromStorage();
     this.filterTasks();
   }
 
@@ -72,39 +74,8 @@ export class HomePage implements OnInit, OnDestroy {
    * Carga las tareas desde el almacenamiento local
    * TODO: Conectar con SQLite service
    */
-  private loadTasksFromStorage() {
-    // Datos de prueba temporales
-    this.allTasks = [
-      {
-        id: '1',
-        title: 'Implementar modelo Task',
-        description: 'Crear interfaces y tipos para las tareas',
-        isCompleted: true,
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
-        updatedAt: new Date(Date.now() - 86400000).toISOString(),
-        isSynced: true
-      },
-      {
-        id: '2',
-        title: 'Crear páginas base',
-        description: 'Diseñar home y task-form pages',
-        isCompleted: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        isSynced: false
-      },
-      {
-        id: '3',
-        title: 'Configurar SQLite',
-        description: 'Instalar y configurar base de datos local',
-        isCompleted: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        isSynced: true
-      }
-    ];
-    
-    // Calcular tareas pendientes de sincronización
+  private async loadTasksFromStorage() {
+    this.allTasks = await this.sqliteService.getTasks();
     this.pendingSyncCount = this.allTasks.filter(task => !task.isSynced).length;
   }
 
@@ -145,26 +116,14 @@ export class HomePage implements OnInit, OnDestroy {
    */
   async toggleTaskCompletion(task: Task) {
     try {
-      // Actualizar el estado local
       task.isCompleted = !task.isCompleted;
       task.updatedAt = new Date().toISOString();
       task.isSynced = false;
-      
-      // TODO: Guardar en SQLite
-      console.log(`✅ Task ${task.id} marked as ${task.isCompleted ? 'completed' : 'pending'}`);
-      
-      // Actualizar contadores
+      await this.sqliteService.updateTask(task);
       this.pendingSyncCount = this.allTasks.filter(t => !t.isSynced).length;
       this.filterTasks();
-      
-      // TODO: Sincronizar si hay conexión
-      if (this.isOnline) {
-        // await this.syncService.syncTask(task);
-      }
-      
     } catch (error) {
       console.error('Error updating task:', error);
-      // Revertir el cambio
       task.isCompleted = !task.isCompleted;
     }
   }
@@ -197,23 +156,12 @@ export class HomePage implements OnInit, OnDestroy {
   /**
    * Ejecuta la eliminación de la tarea
    */
-  private performDeleteTask(task: Task) {
+  private async performDeleteTask(task: Task) {
     try {
-      // Eliminar de la lista local
+      await this.sqliteService.deleteTask(task.id);
       this.allTasks = this.allTasks.filter(t => t.id !== task.id);
-      
-      // TODO: Eliminar de SQLite
-      console.log(`🗑️ Task ${task.id} deleted`);
-      
-      // Actualizar vista
       this.filterTasks();
       this.pendingSyncCount = this.allTasks.filter(t => !t.isSynced).length;
-      
-      // TODO: Marcar para eliminación en servidor si estaba sincronizada
-      if (task.isSynced && this.isOnline) {
-        // await this.syncService.deleteTaskOnServer(task.id);
-      }
-      
     } catch (error) {
       console.error('Error deleting task:', error);
     }
