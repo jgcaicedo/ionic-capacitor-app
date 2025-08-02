@@ -4,6 +4,7 @@ import { AlertController } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { Task } from '../models';
 import { SqliteService } from '../services/sqlite.service';
+import { SyncService } from '../services/sync.service';
 
 @Component({
   selector: 'app-home',
@@ -28,13 +29,16 @@ export class HomePage implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private alertController: AlertController,
-    private sqliteService: SqliteService
+    private sqliteService: SqliteService,
+    private syncService: SyncService
   ) {}
 
   ngOnInit() {
     console.log('🏠 HomePage initialized');
     this.loadInitialData();
     this.setupNetworkListener();
+    // Si ya está online y hay pendientes, mostrar aviso
+    setTimeout(() => this.checkPendingSync(), 500);
   }
 
   ngOnDestroy() {
@@ -55,19 +59,43 @@ export class HomePage implements OnInit, OnDestroy {
    * Configura el listener para detectar cambios de conectividad
    */
   private setupNetworkListener() {
-    // TODO: Implementar con Capacitor Network plugin
-    // Por ahora simulamos el estado online
     this.isOnline = navigator.onLine;
-    
-    window.addEventListener('online', () => {
+    window.addEventListener('online', async () => {
       this.isOnline = true;
       console.log('📶 App is online');
+      await this.checkPendingSync(true);
     });
-    
     window.addEventListener('offline', () => {
       this.isOnline = false;
-      console.log('📵 App is offline');
+      console.log('� App is offline');
     });
+  }
+
+  /**
+   * Verifica si hay tareas pendientes de sincronizar y avisa
+   * Si autoSync=true, sincroniza automáticamente y muestra alerta
+   */
+  private async checkPendingSync(autoSync: boolean = false) {
+    await this.loadTasksFromStorage();
+    if (this.isOnline && this.pendingSyncCount > 0) {
+      if (autoSync) {
+        await this.syncTasks(true);
+      } else {
+        this.showSyncAvailableAlert();
+      }
+    }
+  }
+
+  /**
+   * Muestra un aviso de que hay tareas listas para sincronizar
+   */
+  private async showSyncAvailableAlert() {
+    const alert = await this.alertController.create({
+      header: 'Sincronización disponible',
+      message: `Tienes ${this.pendingSyncCount} tareas listas para sincronizar con el servidor.`,
+      buttons: ['OK']
+    });
+    await alert.present();
   }
 
   /**
@@ -170,27 +198,38 @@ export class HomePage implements OnInit, OnDestroy {
   /**
    * Sincroniza las tareas con el servidor
    */
-  async syncTasks() {
+  /**
+   * Sincroniza las tareas con el servidor (manual o automático)
+   * Si triggeredByNetwork=true, muestra alerta de éxito/error
+   */
+  async syncTasks(triggeredByNetwork: boolean = false) {
     if (!this.isOnline) {
       console.log('📵 Cannot sync - offline');
       return;
     }
-
     try {
       console.log('🔄 Starting sync...');
-      // TODO: Implementar sincronización real
-      
-      // Simular sincronización
-      setTimeout(() => {
-        this.allTasks.forEach(task => {
-          task.isSynced = true;
+      await this.syncService.fullSync();
+      await this.loadTasksFromStorage();
+      this.filterTasks();
+      if (triggeredByNetwork) {
+        const alert = await this.alertController.create({
+          header: 'Sincronización exitosa',
+          message: 'Las tareas se sincronizaron correctamente con el servidor.',
+          buttons: ['OK']
         });
-        this.pendingSyncCount = 0;
-        console.log('✅ Sync completed');
-      }, 1000);
-      
+        await alert.present();
+      }
     } catch (error) {
       console.error('❌ Sync failed:', error);
+      if (triggeredByNetwork) {
+        const alert = await this.alertController.create({
+          header: 'Error de sincronización',
+          message: 'Ocurrió un error al sincronizar con el servidor.',
+          buttons: ['OK']
+        });
+        await alert.present();
+      }
     }
   }
 
