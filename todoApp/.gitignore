@@ -48,6 +48,25 @@ yarn-error.log
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
+
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# API keys and sensitive data
+/src/environments/environment.prod.ts
+
+# Capacitor Android builds
+/android/app/release/
+/android/app/debug/
+/android/.gradle/
+/android/gradle/
 !.vscode/launch.json
 !.vscode/extensions.json
 .history/*
