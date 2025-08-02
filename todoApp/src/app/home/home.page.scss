@@ -1,6 +1,5 @@
 #container {
   text-align: center;
-
   position: absolute;
   left: 0;
   right: 0;
@@ -16,12 +15,88 @@
 #container p {
   font-size: 16px;
   line-height: 22px;
-
   color: #8c8c8c;
-
   margin: 0;
 }
 
 #container a {
   text-decoration: none;
+}
+
+// Estilos específicos para la Todo App
+.sync-status {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--ion-color-light);
+  border-bottom: 1px solid var(--ion-color-light-shade);
+  font-size: 14px;
+  
+  &.online {
+    background: var(--ion-color-success-tint);
+    color: var(--ion-color-success-shade);
+  }
+  
+  &.offline {
+    background: var(--ion-color-warning-tint);
+    color: var(--ion-color-warning-shade);
+  }
+  
+  ion-icon {
+    margin-right: 8px;
+  }
+  
+  ion-button {
+    margin-left: auto;
+  }
+}
+
+.tasks-container {
+  padding-bottom: 80px; // Espacio para el FAB
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  
+  ion-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+  }
+  
+  h3 {
+    color: var(--ion-color-medium);
+    margin-bottom: 20px;
+  }
+}
+
+.task-label {
+  &.completed {
+    h2 {
+      text-decoration: line-through;
+      color: var(--ion-color-medium);
+    }
+    
+    p {
+      color: var(--ion-color-medium);
+    }
+  }
+  
+  .task-meta {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    
+    ion-chip {
+      margin: 0;
+    }
+  }
+}
+
+ion-segment {
+  margin: 16px;
+}
+
+ion-checkbox {
+  margin-right: 16px;
 }

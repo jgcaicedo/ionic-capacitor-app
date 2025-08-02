@@ -1,20 +1,113 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
+  <ion-toolbar color="primary">
     <ion-title>
-      Blank
+      📱 Todo App
     </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="goToAddTask()">
+        <ion-icon name="add" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
+      <ion-title size="large">Todo App</ion-title>
     </ion-toolbar>
   </ion-header>
 
-  <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
+  <!-- Estado de sincronización -->
+  <div class="sync-status" [class.online]="isOnline" [class.offline]="!isOnline">
+    <ion-icon [name]="isOnline ? 'wifi' : 'wifi-off'"></ion-icon>
+    <span>{{ isOnline ? 'En línea' : 'Modo offline' }}</span>
+    <ion-button 
+      *ngIf="isOnline && pendingSyncCount > 0" 
+      size="small" 
+      fill="clear" 
+      (click)="syncTasks()">
+      Sincronizar ({{ pendingSyncCount }})
+    </ion-button>
   </div>
+
+  <!-- Filtros de tareas -->
+  <ion-segment [(ngModel)]="currentFilter" (ionChange)="filterTasks()">
+    <ion-segment-button value="all">
+      <ion-label>Todas ({{ allTasks.length }})</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="pending">
+      <ion-label>Pendientes ({{ pendingTasks.length }})</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="completed">
+      <ion-label>Completadas ({{ completedTasks.length }})</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+
+  <!-- Lista de tareas -->
+  <div class="tasks-container">
+    <!-- Estado vacío -->
+    <div *ngIf="filteredTasks.length === 0" class="empty-state">
+      <ion-icon name="clipboard-outline" color="medium"></ion-icon>
+      <h3>{{ getEmptyMessage() }}</h3>
+      <ion-button fill="outline" (click)="goToAddTask()">
+        <ion-icon name="add" slot="start"></ion-icon>
+        Crear primera tarea
+      </ion-button>
+    </div>
+
+    <!-- Lista de tareas -->
+    <ion-list *ngIf="filteredTasks.length > 0">
+      <ion-item-sliding *ngFor="let task of filteredTasks; trackBy: trackByTaskId">
+        
+        <!-- Contenido principal de la tarea -->
+        <ion-item>
+          <!-- Checkbox -->
+          <ion-checkbox 
+            slot="start" 
+            [checked]="task.isCompleted" 
+            (ionChange)="toggleTaskCompletion(task)">
+          </ion-checkbox>
+          
+          <!-- Información de la tarea -->
+          <ion-label class="task-label" [class.completed]="task.isCompleted">
+            <h2>{{ task.title }}</h2>
+            <p *ngIf="task.description">{{ task.description }}</p>
+            <div class="task-meta">
+              <ion-chip color="medium" size="small">
+                <ion-icon name="time-outline"></ion-icon>
+                <ion-label>{{ formatDate(task.updatedAt) }}</ion-label>
+              </ion-chip>
+              <ion-chip 
+                *ngIf="!task.isSynced" 
+                color="warning" 
+                size="small">
+                <ion-icon name="sync-outline"></ion-icon>
+                <ion-label>Sin sincronizar</ion-label>
+              </ion-chip>
+            </div>
+          </ion-label>
+        </ion-item>
+
+        <!-- Opciones deslizables -->
+        <ion-item-options side="end">
+          <ion-item-option color="primary" (click)="editTask(task)">
+            <ion-icon name="create-outline" slot="icon-only"></ion-icon>
+          </ion-item-option>
+          <ion-item-option color="danger" (click)="deleteTask(task)">
+            <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+          </ion-item-option>
+        </ion-item-options>
+
+      </ion-item-sliding>
+    </ion-list>
+  </div>
+
+  <!-- Botón flotante para agregar tarea -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="goToAddTask()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
 </ion-content>
