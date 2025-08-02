@@ -1,0 +1,132 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      {{ isEditing ? 'Editar Tarea' : 'Nueva Tarea' }}
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button 
+        (click)="saveTask()" 
+        [disabled]="!taskForm.valid || isSaving">
+        <ion-icon 
+          [name]="isSaving ? 'refresh-outline' : 'checkmark-outline'" 
+          slot="icon-only">
+        </ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  
+  <!-- Formulario de tarea -->
+  <form [formGroup]="taskForm" class="task-form">
+    
+    <!-- Campo título -->
+    <ion-item>
+      <ion-label position="stacked">
+        Título *
+        <ion-text color="danger" *ngIf="taskForm.get('title')?.invalid && taskForm.get('title')?.touched">
+          (requerido)
+        </ion-text>
+      </ion-label>
+      <ion-input 
+        formControlName="title"
+        placeholder="Ingresa el título de la tarea"
+        maxlength="100"
+        counter="true">
+      </ion-input>
+    </ion-item>
+
+    <!-- Campo descripción -->
+    <ion-item>
+      <ion-label position="stacked">Descripción (opcional)</ion-label>
+      <ion-textarea 
+        formControlName="description"
+        placeholder="Describe los detalles de la tarea..."
+        rows="4"
+        maxlength="500"
+        counter="true">
+      </ion-textarea>
+    </ion-item>
+
+    <!-- Estado completado (solo en edición) -->
+    <ion-item *ngIf="isEditing">
+      <ion-checkbox formControlName="isCompleted" slot="start"></ion-checkbox>
+      <ion-label>Marcar como completada</ion-label>
+    </ion-item>
+
+    <!-- Información adicional (solo en edición) -->
+    <div *ngIf="isEditing && currentTask" class="task-info">
+      <ion-item>
+        <ion-label>
+          <h3>Información de la tarea</h3>
+          <p>
+            <strong>Creada:</strong> {{ formatDate(currentTask.createdAt) }}
+          </p>
+          <p>
+            <strong>Última actualización:</strong> {{ formatDate(currentTask.updatedAt) }}
+          </p>
+          <ion-chip 
+            [color]="currentTask.isSynced ? 'success' : 'warning'" 
+            size="small">
+            <ion-icon 
+              [name]="currentTask.isSynced ? 'checkmark-circle' : 'sync-outline'">
+            </ion-icon>
+            <ion-label>
+              {{ currentTask.isSynced ? 'Sincronizada' : 'Pendiente sync' }}
+            </ion-label>
+          </ion-chip>
+        </ion-label>
+      </ion-item>
+    </div>
+
+  </form>
+
+  <!-- Botones de acción -->
+  <div class="action-buttons">
+    
+    <!-- Botón guardar -->
+    <ion-button 
+      expand="block" 
+      (click)="saveTask()" 
+      [disabled]="!taskForm.valid || isSaving"
+      color="primary">
+      <ion-icon 
+        [name]="isSaving ? 'refresh-outline' : (isEditing ? 'save-outline' : 'add-outline')" 
+        slot="start">
+      </ion-icon>
+      <span *ngIf="!isSaving">
+        {{ isEditing ? 'Actualizar Tarea' : 'Crear Tarea' }}
+      </span>
+      <span *ngIf="isSaving">Guardando...</span>
+    </ion-button>
+
+    <!-- Botón eliminar (solo en edición) -->
+    <ion-button 
+      *ngIf="isEditing" 
+      expand="block" 
+      color="danger" 
+      fill="outline"
+      (click)="deleteTask()"
+      [disabled]="isSaving">
+      <ion-icon name="trash-outline" slot="start"></ion-icon>
+      Eliminar Tarea
+    </ion-button>
+
+    <!-- Botón cancelar -->
+    <ion-button 
+      expand="block" 
+      color="medium" 
+      fill="clear"
+      (click)="cancelForm()"
+      [disabled]="isSaving">
+      <ion-icon name="close-outline" slot="start"></ion-icon>
+      Cancelar
+    </ion-button>
+
+  </div>
+
+</ion-content>

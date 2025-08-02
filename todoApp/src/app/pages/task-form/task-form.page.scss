@@ -1,0 +1,64 @@
+.task-form {
+  padding: 16px;
+  
+  ion-item {
+    margin-bottom: 16px;
+    
+    ion-label {
+      margin-bottom: 8px;
+    }
+    
+    ion-input, ion-textarea {
+      --padding-start: 0;
+    }
+  }
+}
+
+.task-info {
+  margin-top: 24px;
+  padding: 16px;
+  background: var(--ion-color-light);
+  border-radius: 8px;
+  
+  h3 {
+    margin-top: 0;
+    color: var(--ion-color-primary);
+  }
+  
+  p {
+    margin: 8px 0;
+    font-size: 14px;
+    color: var(--ion-color-medium-shade);
+  }
+  
+  ion-chip {
+    margin: 8px 0 0 0;
+  }
+}
+
+.action-buttons {
+  padding: 24px 16px;
+  
+  ion-button {
+    margin-bottom: 12px;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+// Estado de loading para el botón
+ion-button[disabled] {
+  --opacity: 0.6;
+}
+
+// Animación para el icono de loading
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+ion-icon[name="refresh-outline"] {
+  animation: spin 1s linear infinite;
+}
