@@ -305,23 +305,27 @@ ionic-capacitor-app/
 
 ## 📸 Screenshots
 
-*(Aquí se pueden agregar capturas de pantalla de la aplicación funcionando)*
+### **Lista de Tareas - Pantalla Principal**
+Interfaz principal mostrando todas las tareas con estados visuales de completado y sincronización.
 
-**Lista de Tareas**
-![Pantalla principal con lista de tareas]
-![alt text](image-1.png)
+<img src="image-1.png" alt="Pantalla principal con lista de tareas" width="300"/>
 
-**Crear Nueva Tarea**
-![Formulario de creación de tareas]
-![alt text](image-2.png)
+### **Crear Nueva Tarea**
+Formulario intuitivo para agregar nuevas tareas con título y descripción.
 
-**Sincronización** (precionando el botón)
-![Proceso de sincronización con servidor]
-![alt text](image-3.png)
-![alt text](image-4.png)
+<img src="image-2.png" alt="Formulario de creación de tareas" width="300"/>
 
-**Lista de Tareas** (lista de tareas directamente de la API)
-![alt text](image.png)
+### **Proceso de Sincronización**
+Sincronización en tiempo real presionando el botón de sync, mostrando el progreso y resultado.
+
+<img src="image-3.png" alt="Inicio del proceso de sincronización" width="300"/>
+<img src="image-4.png" alt="Resultado de la sincronización" width="300"/>
+
+### **API Response - Backend Funcionando**
+Respuesta JSON directa de la API REST mostrando las tareas almacenadas en el servidor.
+
+<img src="image.png" alt="Lista de tareas desde la API REST" width="400"/>
+
 ---
 
 *Proyecto completamente funcional - Listo para producción*
