@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController, LoadingController, ToastController } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { Task, CreateTaskDTO, UpdateTaskDTO } from '../../models';
-import { SqliteService } from '../../services/sqlite.service';
+import { SqliteApiFallbackService } from '../../services/sqlite-api-fallback.service';
 
 @Component({
   selector: 'app-task-form',
@@ -32,7 +32,7 @@ export class TaskFormPage implements OnInit, OnDestroy {
     private alertController: AlertController,
     private loadingController: LoadingController,
     private toastController: ToastController,
-    private sqliteService: SqliteService
+    private sqliteService: SqliteApiFallbackService
   ) {
     this.taskForm = this.createForm();
   }
@@ -124,8 +124,8 @@ export class TaskFormPage implements OnInit, OnDestroy {
         this.isEditing ? 'Tarea actualizada correctamente' : 'Tarea creada correctamente'
       );
       
-      // Navegar de vuelta al home
-      this.router.navigate(['/home']);
+      // Navegar de vuelta al home forzando recarga
+      this.router.navigate(['/home'], { replaceUrl: true });
       
     } catch (error) {
       console.error('Error saving task:', error);
@@ -214,7 +214,7 @@ export class TaskFormPage implements OnInit, OnDestroy {
       await this.sqliteService.deleteTask(this.currentTask.id);
       console.log(`🗑️ Tarea eliminada: ${this.currentTask.id}`);
       await this.showSuccessToast('Tarea eliminada correctamente');
-      this.router.navigate(['/home']);
+      this.router.navigate(['/home'], { replaceUrl: true });
     } catch (error) {
       console.error('Error deleting task:', error);
       await this.showErrorToast('Error al eliminar la tarea');
@@ -250,7 +250,7 @@ export class TaskFormPage implements OnInit, OnDestroy {
       await alert.present();
     } else {
       // No hay cambios, regresar directamente
-      this.router.navigate(['/home']);
+      this.router.navigate(['/home'], { replaceUrl: true });
     }
   }
 
@@ -299,7 +299,7 @@ export class TaskFormPage implements OnInit, OnDestroy {
    */
   private async showErrorAndGoBack(message: string) {
     await this.showErrorToast(message);
-    this.router.navigate(['/home']);
+    this.router.navigate(['/home'], { replaceUrl: true });
   }
 
   // Getters para el template

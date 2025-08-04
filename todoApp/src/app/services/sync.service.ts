@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { SqliteService } from './sqlite.service';
+import { SqliteApiFallbackService } from './sqlite-api-fallback.service';
 import { Task } from '../models';
 import { firstValueFrom } from 'rxjs';
 
@@ -8,11 +8,11 @@ import { firstValueFrom } from 'rxjs';
   providedIn: 'root'
 })
 export class SyncService {
-  private apiUrl = 'http://localhost:3000/tasks'; // Cambia si usas otro puerto o despliegue
+  private apiUrl = 'http://192.168.1.6:3000/tasks'; // Cambia si usas otro puerto o despliegue
 
   constructor(
     private http: HttpClient,
-    private sqliteService: SqliteService
+    private sqliteService: SqliteApiFallbackService
   ) {}
 
   /**
@@ -54,3 +54,5 @@ export class SyncService {
     await this.fetchFromServer();
   }
 }
+
+// npx cap open android

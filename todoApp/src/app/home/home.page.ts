@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { Task } from '../models';
-import { SqliteService } from '../services/sqlite.service';
+import { SqliteApiFallbackService } from '../services/sqlite-api-fallback.service';
 import { SyncService } from '../services/sync.service';
 
 @Component({
@@ -29,9 +29,10 @@ export class HomePage implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private alertController: AlertController,
-    private sqliteService: SqliteService,
+    private sqliteService: SqliteApiFallbackService,
     private syncService: SyncService
   ) {}
+
 
   ngOnInit() {
     console.log('🏠 HomePage initialized');
@@ -39,6 +40,11 @@ export class HomePage implements OnInit, OnDestroy {
     this.setupNetworkListener();
     // Si ya está online y hay pendientes, mostrar aviso
     setTimeout(() => this.checkPendingSync(), 500);
+  }
+
+  // Recarga la lista de tareas cada vez que la vista se muestra
+  ionViewWillEnter() {
+    this.loadInitialData();
   }
 
   ngOnDestroy() {

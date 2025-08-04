@@ -1,26 +1,38 @@
 
 import { Injectable } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
-import { SQLiteConnection, SQLiteDBConnection, capSQLiteSet, capSQLiteChanges } from '@capacitor-community/sqlite';
+import { SQLiteConnection, SQLiteDBConnection, CapacitorSQLite } from '@capacitor-community/sqlite';
 import { Task } from '../models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SqliteService {
-  private sqlite: SQLiteConnection;
+  private sqlite: SQLiteConnection | null = null;
   private db: SQLiteDBConnection | null = null;
   private dbName = 'todoapp.db';
   private tableName = 'tasks';
 
   constructor() {
-    this.sqlite = new SQLiteConnection(Capacitor.isNativePlatform() ? window : undefined);
+    if (Capacitor.isNativePlatform()) {
+      this.sqlite = new SQLiteConnection(CapacitorSQLite);
+    } else {
+      this.sqlite = null; // O puedes usar un mock para web
+    }
   }
 
   /**
    * Crea la base de datos y la tabla de tareas si no existen
    */
   async createDB(): Promise<void> {
+    if (!this.sqlite) throw new Error('SQLite solo disponible en dispositivo móvil');
+    // Si ya hay una conexión abierta, reutilízala
+    const isConn = await this.sqlite.isConnection(this.dbName, false);
+    if (isConn.result && this.db) {
+      // Ya existe y está abierta
+      return;
+    }
+    // Si no existe, créala
     this.db = await this.sqlite.createConnection(
       this.dbName, // database
       false,       // encrypted
