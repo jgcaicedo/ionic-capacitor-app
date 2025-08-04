@@ -228,10 +228,22 @@ export class HomePage implements OnInit, OnDestroy {
       }
     } catch (error) {
       console.error('❌ Sync failed:', error);
+      let errorMsg = 'Ocurrió un error al sincronizar con el servidor.';
+      try {
+        errorMsg += '\n' + JSON.stringify(error);
+              console.log('❌ Sync error serializado:', errorMsg);
+
+      } catch (e) {
+        errorMsg += '\n' + String(error);
+              console.log('❌ Sync error serializado:', errorMsg);
+
+      }
+      // Mostrar el error serializado siempre en consola
+      console.log('❌ Sync error serializado:', errorMsg);
       if (triggeredByNetwork) {
         const alert = await this.alertController.create({
           header: 'Error de sincronización',
-          message: 'Ocurrió un error al sincronizar con el servidor.',
+          message: errorMsg,
           buttons: ['OK']
         });
         await alert.present();

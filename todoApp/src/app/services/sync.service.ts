@@ -23,13 +23,26 @@ export class SyncService {
     const allTasks = await this.sqliteService.getTasks();
     const unsynced = allTasks.filter(t => !t.isSynced);
     if (unsynced.length === 0) return [];
-    const res: any = await firstValueFrom(this.http.post(`${this.apiUrl}/sync`, { tasks: unsynced }));
-    // Marcar como sincronizadas en SQLite
-    for (const t of unsynced) {
-      t.isSynced = true;
-      await this.sqliteService.updateTask(t);
+    console.log('[SyncService] Enviando tareas no sincronizadas:', unsynced);
+    try {
+      const res: any = await firstValueFrom(this.http.post(`${this.apiUrl}/sync`, { tasks: unsynced }));
+      console.log('[SyncService] Respuesta de la API /sync:', res);
+      // Marcar como sincronizadas en SQLite
+      for (const t of unsynced) {
+        t.isSynced = true;
+        await this.sqliteService.updateTask(t);
+      }
+      return res.updated || [];
+    } catch (error) {
+      let errorMsg = '[SyncService] Error al sincronizar con la API /sync:';
+      try {
+        errorMsg += '\n' + JSON.stringify(error);
+      } catch (e) {
+        errorMsg += '\n' + String(error);
+      }
+      console.error(errorMsg);
+      throw error;
     }
-    return res.updated || [];
   }
 
   /**
@@ -37,21 +50,42 @@ export class SyncService {
    */
   async fetchFromServer(): Promise<Task[]> {
     await this.sqliteService.createDB();
-    const res: any = await firstValueFrom(this.http.get(this.apiUrl));
-    if (!res.tasks) return [];
-    // Actualiza o inserta tareas en SQLite
-    for (const t of res.tasks) {
-      await this.sqliteService.updateTask({ ...t, isSynced: true });
+    console.log('[SyncService] Descargando tareas del backend...');
+    try {
+      const res: any = await firstValueFrom(this.http.get(this.apiUrl));
+      console.log('[SyncService] Respuesta de la API /tasks:', res);
+      if (!res.tasks) return [];
+      // Actualiza o inserta tareas en SQLite
+      for (const t of res.tasks) {
+        await this.sqliteService.updateTask({ ...t, isSynced: true });
+      }
+      return res.tasks;
+    } catch (error) {
+      let errorMsg = '[SyncService] Error al descargar tareas del backend:';
+      try {
+        errorMsg += '\n' + JSON.stringify(error);
+      } catch (e) {
+        errorMsg += '\n' + String(error);
+      }
+      console.error(errorMsg);
+      throw error;
     }
-    return res.tasks;
   }
 
   /**
    * Sincronización completa (envía y recibe)
    */
   async fullSync(): Promise<void> {
-    await this.syncToServer();
-    await this.fetchFromServer();
+    try {
+      await this.syncToServer();
+    } catch (e) {
+      console.error('[SyncService] Error en syncToServer:', e);
+    }
+    try {
+      await this.fetchFromServer();
+    } catch (e) {
+      console.error('[SyncService] Error en fetchFromServer:', e);
+    }
   }
 }
 
