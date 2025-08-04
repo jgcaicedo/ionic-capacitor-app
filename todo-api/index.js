@@ -87,6 +87,7 @@ app.post('/tasks/sync', (req, res) => {
   res.json({ success: true, updated });
 });
 
-app.listen(PORT, '192.168.1.6', () => {
-  console.log(`Todo API running on http://192.168.1.6:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Todo API running on http://0.0.0.0:${PORT}`);
+  console.log(`Accessible from network at: http://[YOUR_LOCAL_IP]:${PORT}`);
 });
